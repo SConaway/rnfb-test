@@ -36,43 +36,37 @@ export default connect(
 	mapStateToProps,
 	mapDispatchToProps,
 )((props) => {
-	const add = async () => {
+	const add = () => {
 		let string = '';
 
-		for (let i = 0; i < 10000; i++) {
-		    string = string + uuid.v4();
+		for (let i = 0; i < 100000; i++) {
+			string = string + uuid.v4();
 		}
 
-		console.log(`before: ${props.data}`);
 		props.addMain(string);
-		console.log(`after: ${props.data}`);
+	};
 
+	const digest = async () => {
 		const digest = await Crypto.digestStringAsync(
 			Crypto.CryptoDigestAlgorithm.SHA512,
-			JSON.stringify(props.data),
+			props.data,
 		);
 
 		props.setChecksum(digest);
-
-		await check();
 	};
 
 	const check = async () => {
 		const newDigestFromReduxData = await Crypto.digestStringAsync(
 			Crypto.CryptoDigestAlgorithm.SHA512,
-			JSON.stringify(props.data),
+			props.data,
 		);
-        
-        // This is always setting the error, even when it shouldn't be 
-        // I think redux hasn't updated props.data and/or props.checksum by 
-        // the time this code runs
-		if (newDigestFromReduxData != props.checksum) setMatchError(true); 
+
+		if (newDigestFromReduxData != props.checksum) setMatchError(true);
 		else setMatchError(false);
 	};
 
 	useEffect(() => {
 		check();
-		// add();
 	}, []);
 
 	const [matchError, setMatchError] = useState(false);
@@ -85,7 +79,6 @@ export default connect(
 					Size (in kilobytes):{' '}
 					{JSON.stringify(props.data).length / 1024}
 				</Text>
-				<Text style={styles.sizeText}>Length: {props.data.length}</Text>
 				<Text style={styles.sizeText}>
 					Error: {matchError ? 'Yes' : 'No'}
 				</Text>
@@ -94,6 +87,18 @@ export default connect(
 						add();
 					}}
 					title="Add"
+				/>
+				<Button
+					onPress={() => {
+						check();
+					}}
+					title="Check"
+				/>
+				<Button
+					onPress={() => {
+						digest();
+					}}
+					title="Digest"
 				/>
 				<Button
 					onPress={() => {
